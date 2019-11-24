@@ -1,20 +1,22 @@
-const mysql = require("mysql");
+const connection = require("./connection");
+
 const inquirer = require("inquirer");
 // const cTable = require("console.table");
 
-const connection = mysql.createConnection({
-    host: "localhost",
-    port: 3306,
-    user: "root",
-    password: "rootroot",
-    database: "employeeTracker_DB"
-});
+ start();
 
-connection.connect(function(err){
-    if (err) throw err;
-    start();
-})
-
+function returnDepartmentList() {
+    var departmentStr = "SELECT name FROM department";
+    return connection.query(departmentStr);
+}
+function returnRoleList(){
+    var roleStr = "SELECT title FROM role";
+    return connection.query(roleStr);
+}
+function returnEmployeeList(){
+    var employeeStr = "SELECT first_name FROM employee";
+    return connection.query(employeeStr);
+}
 function start(){
     inquirer   
         .prompt({
@@ -107,8 +109,6 @@ function addRole() {
         })
 };
 
-
-
 function addEmployee() {
     inquirer
         .prompt([
@@ -150,44 +150,93 @@ function addEmployee() {
         })
 };
 
-returnDepartmentList();
-function returnDepartmentList(){
-    var sqlStr = "SELECT * FROM department"
-    connection.query(sqlStr, function(err, res){
-        if (err) throw err,
-        console.log(res)
-        // console.log(console);
-    })
-
-}
-// console.log(process)
-function viewDepartment() {
-   returnDepartmentList();
+async function viewDepartment() {
     inquirer
         .prompt([
             {
-            name: "viewDepartment",
-            type: "list",
-            choices: ["operations"],
-            message: "What department would you like to view?"
+                name: "viewDepartment",
+                type: "list",
+                choices: await returnDepartmentList(),
+                message: "What department would you like to view?"
             }
         ])
-        .then (function(answer){
+        .then(function (answer) {
             connection.query("SELECT * FROM department",
-            {
-                name: answer.viewDepartment,
-            },
-            function (err) {
-                if (err) throw err;
-                console.log("You successfully added an employee")
-                start();
-            }
+                {
+                    name: answer.viewDepartment,
+                },
+                function (err) {
+                    if (err) throw err;
+                    start();
+                }
             );
         })
 };
 
-// viewRole();
+async function viewRole() {
+    inquirer
+        .prompt([
+            {
+                name: "viewRole",
+                type: "list",
+                choices: await returnRoleList(),
+                message: "What role would you like to view?"
+            }
+        ])
+        .then(function (answer) {
+            connection.query("SELECT * FROM role",
+                {
+                    name: answer.viewRole,
+                },
+                function (err) {
+                    if (err) throw err;
+                    start();
+                }
+            );
+        })
+};
 
-// viewEmployees();
+async function viewEmployees() {
+    inquirer
+        .prompt([
+            {
+                name: "viewEmployees",
+                type: "list",
+                choices: await returnEmployeeList(),
+                message: "Which employee would you like to view?"
+            }
+        ])
+        .then(function (answer) {
+            connection.query("SELECT * FROM employee",
+                {
+                    name: answer.viewEmpployee,
+                },
+                function (err) {
+                    if (err) throw err;
+                    start();
+                }
+            );
+        })
+};
 
-// updateEmployeeRole();
+async function updateEmployeeRole() {
+    inquirer
+        .prompt([
+            {
+                name: "updateRole",
+                type: "input",
+                message: "Which employee role would you like to update?"
+            }
+        ])
+        .then(function (answer) {
+            connection.query("UPDATE role SET ? WHERE ?",
+                {
+                    title: answer.updateRole,
+                },
+                function (err) {
+                    if (err) throw err;
+                    start();
+                }
+            );
+        })
+};
